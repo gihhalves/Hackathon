@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IsyShell — Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f14;--bg2:#141720;--bg3:#1c2030;--bg4:#242840;
+  --border:#2a2f45;--border2:#3a4060;
+  --text:#e8eaf0;--text2:#9ba3bf;--text3:#5a6280;
+  --green:#22c55e;--green2:#16a34a;--green-bg:#0a2e1a;
+  --red:#ef4444;--red-bg:#2e0a0a;
+  --blue:#60a5fa;--blue-bg:#0a1a2e;
+  --amber:#f59e0b;--amber-bg:#2e1e0a;
+  --purple:#a78bfa;
+  --font:'DM Sans',sans-serif;--mono:'JetBrains Mono',monospace;
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+.shell{display:grid;grid-template-columns:220px 1fr;grid-template-rows:auto 1fr;min-height:100vh}
+.sidebar{grid-row:1/3;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.logo{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.logo-mark{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--text);letter-spacing:-0.5px}
+.logo-mark span{color:var(--green)}
+.logo-sub{font-size:11px;color:var(--text3);margin-top:2px;font-family:var(--mono)}
+.nav{padding:12px 8px;flex:1}
+.nav-section{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:8px 12px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--radius);cursor:pointer;color:var(--text2);font-size:13px;transition:all .15s;margin:1px 0;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:var(--bg4);color:var(--green);border:1px solid var(--border2)}
+.nav-badge{margin-left:auto;font-size:10px;font-family:var(--mono);background:var(--green-bg);color:var(--green);padding:1px 6px;border-radius:4px;border:1px solid var(--green2)}
+.sidebar-footer{padding:12px;border-top:1px solid var(--border)}
+.token-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px}
+.token-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.token-val{font-family:var(--mono);font-size:11px;color:var(--amber);word-break:break-all}
+.token-status{display:flex;align-items:center;gap:5px;margin-top:6px;font-size:11px;color:var(--green)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between}
+.topbar-title{font-size:15px;font-weight:600;color:var(--text)}
+.topbar-meta{font-size:12px;color:var(--text3);font-family:var(--mono)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:12px;cursor:pointer;font-family:var(--font);transition:all .15s}
+.btn:hover{background:var(--bg4)}
+.btn-green{background:var(--green-bg);border-color:var(--green2);color:var(--green)}
+.content{overflow:auto;padding:24px}
+.page{display:none}.page.active{display:block}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px}
+.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.stat-value{font-size:24px;font-weight:600;font-family:var(--mono);color:var(--text)}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:4px}
+.stat-value.green{color:var(--green)}.stat-value.red{color:var(--red)}.stat-value.blue{color:var(--blue)}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px}
+.scripts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:24px}
+.script-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;transition:all .2s}
+.script-card:hover{border-color:var(--border2);background:var(--bg3)}
+.script-card.running{border-color:var(--green2);box-shadow:0 0 0 1px var(--green2) inset}
+.script-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.script-name{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--text)}
+.script-badge{font-size:10px;padding:2px 8px;border-radius:4px;border:1px solid;font-family:var(--mono)}
+.badge-active{background:var(--green-bg);color:var(--green);border-color:var(--green2)}
+.badge-running{background:var(--amber-bg);color:var(--amber);border-color:var(--amber);animation:blink .8s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
+.script-desc{font-size:12px;color:var(--text2);margin-bottom:12px}
+.script-meta{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.script-actions{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.run-btn{flex:1;padding:7px;background:var(--green-bg);border:1px solid var(--green2);color:var(--green);border-radius:var(--radius);font-size:12px;cursor:pointer;font-family:var(--mono);font-weight:500;transition:all .15s}
+.run-btn:hover{background:#0d3d21}
+.run-btn:disabled{opacity:.4;cursor:not-allowed}
+.terminal{background:#0a0c10;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:24px}
+.term-header{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg3)}
+.term-dots{display:flex;gap:5px}
+.term-dot{width:10px;height:10px;border-radius:50%}
+.term-title{font-family:var(--mono);font-size:11px;color:var(--text3);margin-left:4px;flex:1}
+.term-body{padding:14px;font-family:var(--mono);font-size:12px;line-height:1.7;min-height:120px;max-height:220px;overflow-y:auto}
+.term-line{display:flex;gap:8px}
+.term-prompt{color:var(--green);user-select:none}
+.term-out{color:var(--text2)}
+.term-ok{color:var(--green)}
+.term-err{color:var(--red)}
+.cursor{display:inline-block;width:7px;height:13px;background:var(--green);animation:blink .8s infinite;vertical-align:text-bottom;margin-left:2px}
+.logs-table{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.logs-table table{width:100%;border-collapse:collapse}
+.logs-table th{padding:10px 16px;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg3)}
+.logs-table td{padding:10px 16px;font-size:12px;color:var(--text);border-bottom:1px solid var(--border)}
+.logs-table tr:last-child td{border:none}
+.logs-table tr:hover td{background:var(--bg3)}
+.status-pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:4px;border:1px solid}
+.status-success{background:var(--green-bg);color:var(--green);border-color:var(--green2)}
+.status-error{background:var(--red-bg);color:var(--red);border-color:#7f1d1d}
+.ts-mono{font-family:var(--mono);font-size:11px;color:var(--text3)}
+.endpoint-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:12px;overflow:hidden}
+.endpoint-head{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer}
+.method{font-family:var(--mono);font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;min-width:44px;text-align:center}
+.GET{background:var(--blue-bg);color:var(--blue);border:1px solid #1e3a5f}
+.POST{background:var(--green-bg);color:var(--green);border:1px solid var(--green2)}
+.endpoint-path{font-family:var(--mono);font-size:13px;color:var(--text)}
+.endpoint-desc{font-size:12px;color:var(--text2);margin-left:auto}
+.endpoint-body{padding:0 16px 16px;border-top:1px solid var(--border)}
+.code-block{background:#0a0c10;border:1px solid var(--border);border-radius:var(--radius);padding:12px;font-family:var(--mono);font-size:11px;line-height:1.7;margin-top:12px;overflow-x:auto;color:var(--text2)}
+.kw{color:var(--purple)}.str{color:var(--amber)}.key{color:var(--blue)}.val{color:var(--green)}.cm{color:var(--text3)}
+.token-form{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;max-width:480px}
+.form-group{margin-bottom:16px}
+.form-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;display:block}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">isy<span>shell</span></div>
+    <div class="logo-sub">v1.0.0 · hackathon build</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Main</div>
+    <button class="nav-item active" onclick="goto('dashboard',this)">⊞ Dashboard</button>
+    <button class="nav-item" onclick="goto('scripts',this)">▶ Scripts <span class="nav-badge" id="script-count">0</span></button>
+    <button class="nav-item" onclick="goto('logs',this)">≡ Logs <span class="nav-badge" id="log-count">0</span></button>
+    <div class="nav-section">Config</div>
+    <button class="nav-item" onclick="goto('api',this)">⚡ API Docs</button>
+    <button class="nav-item" onclick="goto('token',this)">🔒 Tokens</button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="token-box">
+      <div class="token-label">Token ativo</div>
+      <div class="token-val" id="sidebar-token">isy-secret-token</div>
+      <div class="token-status"><span class="dot"></span> Autenticado</div>
+    </div>
+  </div>
+</aside>
+<header class="topbar">
+  <div>
+    <div class="topbar-title" id="page-title">Dashboard</div>
+    <div class="topbar-meta" id="page-meta">Visão geral do sistema</div>
+  </div>
+  <div class="topbar-right">
+    <button class="btn" onclick="refreshLogs()">↻ Atualizar</button>
+    <button class="btn btn-green" onclick="goto('scripts',document.querySelectorAll('.nav-item')[1])">▶ Executar Script</button>
+  </div>
+</header>
+<main class="content">
+  <div class="page active" id="page-dashboard">
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Scripts ativos</div><div class="stat-value green" id="stat-active">0</div><div class="stat-sub">carregando...</div></div>
+      <div class="stat"><div class="stat-label">Execuções hoje</div><div class="stat-value blue" id="stat-exec">0</div><div class="stat-sub">execute um script</div></div>
+      <div class="stat"><div class="stat-label">Taxa de sucesso</div><div class="stat-value green" id="stat-success">—</div><div class="stat-sub">últimas execuções</div></div>
+      <div class="stat"><div class="stat-label">Erros</div><div class="stat-value red" id="stat-errors">0</div><div class="stat-sub">nenhum crítico</div></div>
+    </div>
+    <div class="section-head"><div class="section-title">Terminal de saída</div></div>
+    <div class="terminal">
+      <div class="term-header">
+        <div class="term-dots"><div class="term-dot" style="background:#ef4444"></div><div class="term-dot" style="background:#f59e0b"></div><div class="term-dot" style="background:#22c55e"></div></div>
+        <div class="term-title">isyshell — bash · api</div>
+        <span style="font-size:11px;font-family:var(--mono);color:var(--green)" id="api-status">● conectando...</span>
+      </div>
+      <div class="term-body" id="terminal">
+        <div class="term-line"><span class="term-prompt">$</span><span style="color:var(--text)"> IsyShell API v1.0 — iniciando...</span></div>
+        <div class="term-line"><span class="term-prompt">$</span><span class="term-out"> Aguardando comandos...<span class="cursor"></span></span></div>
+      </div>
+    </div>
+    <div class="section-head"><div class="section-title">Atividade recente</div></div>
+    <div class="logs-table">
+      <table><thead><tr><th>Script</th><th>Horário</th><th>Status</th><th>Saída</th></tr></thead>
+      <tbody id="dash-logs"><tr><td colspan="4" style="color:var(--text3);text-align:center;padding:24px">Nenhuma execução ainda. Execute um script!</td></tr></tbody></table>
+    </div>
+  </div>
+  <div class="page" id="page-scripts"><div class="scripts-grid" id="scripts-grid"><p style="color:var(--text3);padding:20px">Carregando scripts da API...</p></div></div>
+  <div class="page" id="page-logs">
+    <div class="logs-table"><table><thead><tr><th>#</th><th>Script</th><th>Horário</th><th>Duração</th><th>Status</th><th>Saída</th></tr></thead>
+    <tbody id="full-logs"><tr><td colspan="6" style="color:var(--text3);text-align:center;padding:24px">Nenhuma execução registrada.</td></tr></tbody></table></div>
+  </div>
+  <div class="page" id="page-api">
+    <div class="endpoint-card"><div class="endpoint-head" onclick="toggleEndpoint('ep1')"><span class="method GET">GET</span><span class="endpoint-path">/</span><span class="endpoint-desc">Health check da API</span></div><div class="endpoint-body" id="ep1" style="display:none"><div class="code-block"><span class="cm"># Response</span><br><span class="kw">{</span> <span class="key">"message"</span>: <span class="str">"API funcionando"</span> <span class="kw">}</span></div></div></div>
+    <div class="endpoint-card"><div class="endpoint-head" onclick="toggleEndpoint('ep2')"><span class="method GET">GET</span><span class="endpoint-path">/scripts</span><span class="endpoint-desc">Lista todos os scripts</span></div><div class="endpoint-body" id="ep2" style="display:none"><div class="code-block"><span class="cm"># Sem autenticação necessária</span><br><span class="kw">[</span><span class="str">"hello.sh"</span>, <span class="str">"docker_status.sh"</span><span class="kw">]</span></div></div></div>
+    <div class="endpoint-card"><div class="endpoint-head" onclick="toggleEndpoint('ep3')"><span class="method POST">POST</span><span class="endpoint-path">/execute/{script_name}</span><span class="endpoint-desc">Executa script — requer token</span></div><div class="endpoint-body" id="ep3" style="display:none"><div class="code-block"><span class="cm"># Header obrigatório:</span><br><span class="key">X-Isy-Token</span>: <span class="str">isy-secret-token</span></div></div></div>
+    <div class="endpoint-card"><div class="endpoint-head" onclick="toggleEndpoint('ep4')"><span class="method GET">GET</span><span class="endpoint-path">/logs</span><span class="endpoint-desc">Histórico de execuções</span></div><div class="endpoint-body" id="ep4" style="display:none"><div class="code-block"><span class="cm"># Retorna array com todos os logs</span></div></div></div>
+  </div>
+  <div class="page" id="page-token">
+    <div class="token-form">
+      <div class="form-group"><label class="form-label">Token atual</label><input class="form-input" id="token-display" value="isy-secret-token" readonly></div>
+      <div class="form-group"><label class="form-label">Novo token</label><input class="form-input" id="token-new" placeholder="Digite o novo token..."></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-green" onclick="updateToken()">✓ Atualizar</button><button class="btn" onclick="genToken()">↻ Gerar aleatório</button></div>
+      <div id="token-msg" style="margin-top:12px;font-size:12px;color:var(--green);font-family:var(--mono);display:none"></div>
+    </div>
+  </div>
+</main>
+</div>
+<script>
+const API = "http://localhost:8000";
+const TOKEN = "isy-secret-token";
+let logs = [];
+ 
+// Verifica se a API está online
+async function verificarAPI() {
+  try {
+    await fetch(`${API}/`);
+    document.getElementById('api-status').textContent = '● connected';
+    document.getElementById('api-status').style.color = 'var(--green)';
+  } catch(e) {
+    document.getElementById('api-status').textContent = '● offline';
+    document.getElementById('api-status').style.color = 'var(--red)';
+  }
+}
+ 
+async function carregarScripts() {
+  try {
+    const r = await fetch(`${API}/scripts`);
+    const scripts = await r.json();
+    document.getElementById('scripts-grid').innerHTML = scripts.map((s, i) => `
+      <div class="script-card" id="card-${i}">
+        <div class="script-card-header">
+          <div class="script-name">${s.name}</div>
+          <span class="script-badge badge-active" id="badge-${i}">active</span>
+        </div>
+        <div class="script-desc">Script Linux registrado na API</div>
+        <div class="script-meta" id="meta-${i}">nunca executado</div>
+        <div class="script-actions">
+          <button class="run-btn" id="run-${i}" onclick="executar('${s.name}', ${i})">▶ Executar</button>
+        </div>
+      </div>`).join('');
+    document.getElementById('script-count').textContent = scripts.length;
+    document.getElementById('stat-active').textContent = scripts.length;
+  } catch(e) {
+    document.getElementById('scripts-grid').innerHTML = '<p style="color:var(--red);padding:20px">⚠ API offline. Rode no CMD: uvicorn main:app --reload</p>';
+  }
+}
+ 
+async function executar(nome, idx) {
+  const btn = document.getElementById('run-'+idx);
+  const badge = document.getElementById('badge-'+idx);
+  btn.disabled = true; btn.textContent = '⟳ Executando...';
+  badge.className = 'script-badge badge-running'; badge.textContent = 'running';
+  try {
+    const inicio = Date.now();
+    const r = await fetch(`${API}/execute/${nome}`, {
+      method: 'POST',
+      headers: { 'X-Isy-Token': TOKEN }
+    });
+    const dados = await r.json();
+    const dur = ((Date.now() - inicio) / 1000).toFixed(2) + 's';
+    const now = new Date();
+    const ts = now.toLocaleTimeString('pt-BR');
+    const tsLong = now.toLocaleString('pt-BR');
+    const status = dados.status === 'sucesso' ? 'success' : 'error';
+    const out = dados.stdout || dados.stderr || '';
+    logs.unshift({id: logs.length+1, script: nome, ts: tsLong, dur, status, out: out.trim().replace(/\n/g,' | ')});
+    addTermLine(nome, out, status);
+    updateStats();
+    renderLogRows();
+    document.getElementById('meta-'+idx).textContent = 'Último: ' + ts;
+  } catch(e) {
+    addTermLine(nome, 'Erro: API offline', 'error');
+  }
+  btn.disabled = false; btn.textContent = '▶ Executar';
+  badge.className = 'script-badge badge-active'; badge.textContent = 'active';
+}
+ 
+function addTermLine(script, out, status) {
+  const t = document.getElementById('terminal');
+  const c = t.querySelector('.cursor'); if(c) c.remove();
+  t.innerHTML += `
+    <div class="term-line"><span class="term-prompt">$</span><span style="color:var(--text)"> POST /execute/${script}</span></div>
+    <div class="term-line"><span class="term-prompt" style="color:${status==='success'?'var(--green)':'var(--red)'}">→</span>
+    <span class="${status==='success'?'term-ok':'term-err'}"> [${status.toUpperCase()}] ${out.split('\n')[0]}</span></div>
+    <div class="term-line"><span class="term-prompt">$</span><span class="term-out"> aguardando...<span class="cursor"></span></span></div>`;
+  t.scrollTop = t.scrollHeight;
+}
+ 
+function updateStats() {
+  const total = logs.length, errors = logs.filter(l=>l.status==='error').length;
+  document.getElementById('stat-exec').textContent = total;
+  document.getElementById('stat-errors').textContent = errors;
+  document.getElementById('stat-success').textContent = total > 0 ? Math.round((total-errors)/total*100)+'%' : '—';
+  document.getElementById('log-count').textContent = total;
+}
+ 
+function renderLogRows() {
+  const pill = l => `<span class="status-pill ${l.status==='success'?'status-success':'status-error'}"><span class="dot" style="background:${l.status==='success'?'var(--green)':'var(--red)'}"></span>${l.status}</span>`;
+  document.getElementById('dash-logs').innerHTML = logs.length ? logs.slice(0,8).map(l=>`
+    <tr><td style="font-family:var(--mono)">${l.script}</td><td class="ts-mono">${l.ts}</td><td>${pill(l)}</td>
+    <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${l.out}</td></tr>`).join('') :
+    '<tr><td colspan="4" style="color:var(--text3);text-align:center;padding:24px">Nenhuma execução ainda.</td></tr>';
+  document.getElementById('full-logs').innerHTML = logs.length ? logs.map(l=>`
+    <tr><td class="ts-mono">#${l.id}</td><td style="font-family:var(--mono)">${l.script}</td>
+    <td class="ts-mono">${l.ts}</td><td class="ts-mono">${l.dur}</td><td>${pill(l)}</td>
+    <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${l.out}</td></tr>`).join('') :
+    '<tr><td colspan="6" style="color:var(--text3);text-align:center;padding:24px">Nenhuma execução registrada.</td></tr>';
+}
+ 
+function goto(page, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(el) el.classList.add('active');
+  const titles = {dashboard:'Dashboard',scripts:'Scripts',logs:'Logs',api:'API Docs',token:'Tokens'};
+  const metas = {dashboard:'Visão geral do sistema',scripts:'Execute e gerencie scripts Linux',logs:'Histórico de execuções',api:'Endpoints disponíveis',token:'Controle de acesso'};
+  document.getElementById('page-title').textContent = titles[page];
+  document.getElementById('page-meta').textContent = metas[page];
+}
+ 
+function toggleEndpoint(id){const el=document.getElementById(id);el.style.display=el.style.display==='none'?'block':'none';}
+function refreshLogs(){renderLogRows(); carregarScripts();}
+function updateToken(){
+  const v=document.getElementById('token-new').value.trim();if(!v)return;
+  document.getElementById('token-display').value=v;
+  document.getElementById('sidebar-token').textContent=v;
+  const m=document.getElementById('token-msg');m.textContent='✓ Token atualizado!';m.style.display='block';
+  setTimeout(()=>m.style.display='none',3000);
+  document.getElementById('token-new').value='';
+}
+function genToken(){
+  const chars='abcdefghijklmnopqrstuvwxyz0123456789';
+  document.getElementById('token-new').value='isy-'+Array.from({length:16},()=>chars[Math.floor(Math.random()*chars.length)]).join('');
+}
+ 
+verificarAPI();
+carregarScripts();
+renderLogRows();
+</script>
+</body>
+</html>

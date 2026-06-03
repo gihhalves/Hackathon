@@ -1,0 +1,15 @@
+services:
+
+  backend:
+    build: .
+
+    container_name: isyshell-api
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - ./scripts:/app/scripts
+
+    env_file:
+      - .env
